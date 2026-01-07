@@ -1,20 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>QR Scanner</title>
+<title>Quét QR</title>
 <style>
-video { width: 100%; max-width: 320px; }
-canvas { display:none; }
-#result { margin-top:10px; word-break: break-all; }
+body { font-family: Arial; text-align:center; }
+video { width:100%; max-width:320px; border:1px solid #ccc; }
+#result { margin-top:12px; font-size:16px; word-break:break-all; }
+button { padding:10px 18px; font-size:16px; margin:8px; }
+a { color:blue; }
 </style>
 </head>
 
 <body>
-<h3>Quét QR</h3>
+
+<h2>Quét mã QR</h2>
 <button onclick="start()">▶ Bắt đầu quét</button>
+
 <video id="video"></video>
-<canvas id="canvas"></canvas>
+<canvas id="canvas" hidden></canvas>
+
 <div id="result">Chưa quét</div>
 
 <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
@@ -23,31 +28,53 @@ const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const result = document.getElementById("result");
+let stream;
 
 function start() {
+  result.innerText = "Đang quét...";
   navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-    .then(stream => {
+    .then(s => {
+      stream = s;
       video.srcObject = stream;
       video.setAttribute("playsinline", true);
       video.play();
-      requestAnimationFrame(tick);
+      requestAnimationFrame(scan);
     });
 }
 
-function tick() {
+function scan() {
   if (video.readyState === video.HAVE_ENOUGH_DATA) {
-    canvas.height = video.videoHeight;
     canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const code = jsQR(imageData.data, canvas.width, canvas.height);
+    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(img.data, canvas.width, canvas.height);
+
     if (code) {
-      result.innerText = "ĐÃ QUÉT: " + code.data;
+      stopCamera();
+      showResult(code.data);
       return;
     }
   }
-  requestAnimationFrame(tick);
+  requestAnimationFrame(scan);
+}
+
+function stopCamera() {
+  if (stream) stream.getTracks().forEach(t => t.stop());
+}
+
+function showResult(text) {
+  if (text.startsWith("http")) {
+    result.innerHTML = `
+      🔗 Link QR:<br>
+      <a href="${text}" target="_blank">${text}</a><br>
+      <button onclick="window.location.href='${text}'">Mở link</button>
+    `;
+  } else {
+    result.innerText = "📦 Nội dung QR: " + text;
+  }
 }
 </script>
+
 </body>
 </html>
