@@ -7,8 +7,9 @@
 <style>
 body { font-family: Arial; text-align: center; }
 #reader { width: 320px; margin: auto; }
-#result { margin-top: 15px; font-size: 16px; color: green; }
-button { padding: 10px 20px; font-size: 16px; }
+#result { margin-top: 15px; font-size: 16px; }
+a { word-break: break-all; }
+button { padding: 10px 20px; font-size: 16px; margin-top:10px;}
 </style>
 </head>
 
@@ -24,29 +25,23 @@ button { padding: 10px 20px; font-size: 16px; }
 let qr;
 
 function startScan() {
-  document.getElementById("result").innerText = "";
+  document.getElementById("result").innerHTML = "";
   qr = new Html5Qrcode("reader");
 
   qr.start(
     { facingMode: "environment" },
-    {
-      fps: 10,
-      qrbox: function (vw, vh) {
-        let size = Math.min(vw, vh) * 0.7;
-        return { width: size, height: size };
-      }
-    },
+    { fps: 10, qrbox: 250 },
     (text) => {
-      document.getElementById("result").innerText = "Đã quét: " + text;
+      qr.stop();
 
-      // 🔥 TỰ MỞ LINK
       if (text.startsWith("http")) {
-        setTimeout(() => window.open(text, "_blank"), 300);
+        document.getElementById("result").innerHTML =
+          `🔗 Link QR:<br>
+           <a href="${text}" target="_blank">${text}</a><br>
+           <button onclick="window.location.href='${text}'">Mở link</button>`;
+      } else {
+        document.getElementById("result").innerText = "Nội dung QR: " + text;
       }
-    },
-    (error) => {
-      // log lỗi đọc để debug (không ảnh hưởng)
-      console.log(error);
     }
   );
 }
