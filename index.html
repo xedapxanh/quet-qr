@@ -2,46 +2,44 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Quét QR</title>
+<title>QR Debug</title>
 <script src="https://unpkg.com/html5-qrcode"></script>
 <style>
 body { font-family: Arial; text-align: center; }
-#reader { width: 320px; margin: auto; }
-#result { margin-top: 15px; font-size: 16px; }
-a { word-break: break-all; }
-button { padding: 10px 20px; font-size: 16px; margin-top:10px;}
+#reader { width: 320px; margin: auto; border:1px solid #ccc; }
+#log { margin-top: 15px; font-size: 16px; color: blue; word-break: break-all; }
+button { padding: 10px 20px; font-size: 16px; }
 </style>
 </head>
 
 <body>
 
-<h2>Quét mã QR</h2>
+<h2>QR DEBUG</h2>
 <button onclick="startScan()">▶ Bắt đầu quét</button>
 
 <div id="reader"></div>
-<div id="result"></div>
+<div id="log">Chưa quét</div>
 
 <script>
 let qr;
 
 function startScan() {
-  document.getElementById("result").innerHTML = "";
+  document.getElementById("log").innerText = "Đang quét...";
   qr = new Html5Qrcode("reader");
 
   qr.start(
     { facingMode: "environment" },
-    { fps: 10, qrbox: 250 },
-    (text) => {
-      qr.stop();
-
-      if (text.startsWith("http")) {
-        document.getElementById("result").innerHTML =
-          `🔗 Link QR:<br>
-           <a href="${text}" target="_blank">${text}</a><br>
-           <button onclick="window.location.href='${text}'">Mở link</button>`;
-      } else {
-        document.getElementById("result").innerText = "Nội dung QR: " + text;
-      }
+    {
+      fps: 5,
+      qrbox: { width: 200, height: 200 }
+    },
+    (decodedText) => {
+      document.getElementById("log").innerText =
+        "ĐÃ QUÉT ĐƯỢC:\n" + decodedText;
+    },
+    (err) => {
+      // ghi log lỗi decode (để biết có đang đọc không)
+      console.log("decode error", err);
     }
   );
 }
