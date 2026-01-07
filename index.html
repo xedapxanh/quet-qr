@@ -1,45 +1,54 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8">
-  <title>Quét QR</title>
-  <script src="https://unpkg.com/html5-qrcode"></script>
+<meta charset="UTF-8">
+<title>Quét QR</title>
+<script src="https://unpkg.com/html5-qrcode"></script>
+<style>
+body { font-family: Arial; text-align: center; }
+#reader { width: 320px; margin: auto; }
+#result { margin-top: 15px; font-size: 16px; color: green; }
+button { padding: 10px 20px; font-size: 16px; }
+</style>
 </head>
+
 <body>
 
-<h2>Quét QR Code</h2>
-
+<h2>Quét mã QR</h2>
 <button onclick="startScan()">▶ Bắt đầu quét</button>
-<button onclick="stopScan()">⏹ Dừng</button>
 
-<div id="reader" style="width:300px;margin-top:10px"></div>
-<p id="result"></p>
+<div id="reader"></div>
+<div id="result"></div>
 
 <script>
 let qr;
 
 function startScan() {
+  document.getElementById("result").innerText = "";
   qr = new Html5Qrcode("reader");
-  qr.start(
-    { facingMode: "environment" }, // camera sau
-    { fps: 10, qrbox: 250 },
-    (text) => {
-      document.getElementById("result").innerText = "Kết quả: " + text;
-      qr.stop();
 
-      // Nếu là link thì mở
-      if (text.startsWith("http")) {
-        window.open(text, "_blank");
+  qr.start(
+    { facingMode: "environment" },
+    {
+      fps: 10,
+      qrbox: function (vw, vh) {
+        let size = Math.min(vw, vh) * 0.7;
+        return { width: size, height: size };
       }
     },
-    (err) => {
-      // console.log(err); // bỏ qua lỗi đọc
+    (text) => {
+      document.getElementById("result").innerText = "Đã quét: " + text;
+
+      // 🔥 TỰ MỞ LINK
+      if (text.startsWith("http")) {
+        setTimeout(() => window.open(text, "_blank"), 300);
+      }
+    },
+    (error) => {
+      // log lỗi đọc để debug (không ảnh hưởng)
+      console.log(error);
     }
   );
-}
-
-function stopScan() {
-  if (qr) qr.stop();
 }
 </script>
 
