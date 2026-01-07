@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
   <meta charset="utf-8">
   <title>Quét QR</title>
@@ -7,29 +7,40 @@
 </head>
 <body>
 
-<h3>Quét QR</h3>
-<div id="reader" style="width:300px"></div>
+<h2>Quét QR Code</h2>
+
+<button onclick="startScan()">▶ Bắt đầu quét</button>
+<button onclick="stopScan()">⏹ Dừng</button>
+
+<div id="reader" style="width:300px;margin-top:10px"></div>
 <p id="result"></p>
 
 <script>
-const qr = new Html5Qrcode("reader");
+let qr;
 
-qr.start(
-  { facingMode: "environment" }, // camera sau
-  { fps: 10, qrbox: 250 },
-  (text) => {
-    qr.stop();
-    document.getElementById("result").innerText = "Dữ liệu: " + text;
+function startScan() {
+  qr = new Html5Qrcode("reader");
+  qr.start(
+    { facingMode: "environment" }, // camera sau
+    { fps: 10, qrbox: 250 },
+    (text) => {
+      document.getElementById("result").innerText = "Kết quả: " + text;
+      qr.stop();
 
-    // 👉 xử lý kết quả
-    if (text.startsWith("http")) {
-      window.open(text, "_blank");
-    } else {
-      console.log("Mã / Text:", text);
-      // Gọi API / xử lý sản phẩm tại đây
+      // Nếu là link thì mở
+      if (text.startsWith("http")) {
+        window.open(text, "_blank");
+      }
+    },
+    (err) => {
+      // console.log(err); // bỏ qua lỗi đọc
     }
-  }
-);
+  );
+}
+
+function stopScan() {
+  if (qr) qr.stop();
+}
 </script>
 
 </body>
