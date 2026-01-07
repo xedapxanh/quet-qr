@@ -1,49 +1,53 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>QR Debug</title>
-<script src="https://unpkg.com/html5-qrcode"></script>
+<title>QR Scanner</title>
 <style>
-body { font-family: Arial; text-align: center; }
-#reader { width: 320px; margin: auto; border:1px solid #ccc; }
-#log { margin-top: 15px; font-size: 16px; color: blue; word-break: break-all; }
-button { padding: 10px 20px; font-size: 16px; }
+video { width: 100%; max-width: 320px; }
+canvas { display:none; }
+#result { margin-top:10px; word-break: break-all; }
 </style>
 </head>
 
 <body>
+<h3>Quét QR</h3>
+<button onclick="start()">▶ Bắt đầu quét</button>
+<video id="video"></video>
+<canvas id="canvas"></canvas>
+<div id="result">Chưa quét</div>
 
-<h2>QR DEBUG</h2>
-<button onclick="startScan()">▶ Bắt đầu quét</button>
-
-<div id="reader"></div>
-<div id="log">Chưa quét</div>
-
+<script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
 <script>
-let qr;
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const result = document.getElementById("result");
 
-function startScan() {
-  document.getElementById("log").innerText = "Đang quét...";
-  qr = new Html5Qrcode("reader");
+function start() {
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+    .then(stream => {
+      video.srcObject = stream;
+      video.setAttribute("playsinline", true);
+      video.play();
+      requestAnimationFrame(tick);
+    });
+}
 
-  qr.start(
-    { facingMode: "environment" },
-    {
-      fps: 5,
-      qrbox: { width: 200, height: 200 }
-    },
-    (decodedText) => {
-      document.getElementById("log").innerText =
-        "ĐÃ QUÉT ĐƯỢC:\n" + decodedText;
-    },
-    (err) => {
-      // ghi log lỗi decode (để biết có đang đọc không)
-      console.log("decode error", err);
+function tick() {
+  if (video.readyState === video.HAVE_ENOUGH_DATA) {
+    canvas.height = video.videoHeight;
+    canvas.width = video.videoWidth;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, canvas.width, canvas.height);
+    if (code) {
+      result.innerText = "ĐÃ QUÉT: " + code.data;
+      return;
     }
-  );
+  }
+  requestAnimationFrame(tick);
 }
 </script>
-
 </body>
 </html>
